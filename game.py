@@ -10,7 +10,7 @@ FPS = 120
 TITLE = "2048 Game"
 
 # Game consts
-MARGIN = 15
+MARGIN = 10
 GRID_SIZE = 4
 BLOCK_SIZE = misc.compute_block_size(WIDTH, MARGIN, GRID_SIZE)
 
@@ -34,7 +34,7 @@ while running:
     clock.tick(FPS)
     # Process input (events)
     for event in pygame.event.get():
-        #check for closing the window
+        # check for closing the window
         if event.type == pygame.QUIT:
             running = False
 

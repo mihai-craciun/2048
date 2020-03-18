@@ -8,6 +8,7 @@ class Game:
     RIGHT = 'right'
     UP = 'up'
     DOWN = 'down'
+    PTS_GAME_OVER = -1
 
     # Constructor
     def __init__(self, board=None, n=None):
@@ -18,8 +19,8 @@ class Game:
             self.n = n
             self.board = np.zeros((n, n), dtype=int)
             # Initialize the game by adding two initial blocks
-            self.add_brick()
-            self.add_brick()
+            self.board = self.add_brick(self.board)
+            self.board = self.add_brick(self.board)
         # Else check if the board has only power of two elements and matches the size
         else:
             self.board = np.array(board, dtype=np.int)
@@ -28,12 +29,15 @@ class Game:
                 raise Exception("The board is not a square, or wrong grid size specified")
 
     # Inserts a random brick of 2 or 4 in a random free position
-    def add_brick(self):
-        empty_i, empty_j = np.where(self.board == 0)
+    @staticmethod
+    def add_brick(board):
+        board = np.array(board)
+        empty_i, empty_j = np.where(board == 0)
         brick = np.random.choice([2, 4])
         # Apply brick in a random free spot
         idx = np.random.randint(len(empty_i))
-        self.board[empty_i[idx]][empty_j[idx]] = brick
+        board[empty_i[idx]][empty_j[idx]] = brick
+        return board
 
     # The score is the sum of all the points
     def get_score(self):
@@ -75,7 +79,7 @@ class Game:
         bricks = np.where(line != 0)[0]
         # If there is no brick return
         if len(bricks) == 0:
-            return line
+            return 0, line
         # copy line
         line = np.array(line)
         # The locations the bricks shifted to
@@ -83,6 +87,8 @@ class Game:
         # Reference for collapse, a brick can only collapse once in a move
         # -1 for None, x for position of leftmost neighbour it collapsed with
         bricks_collapsed = -np.ones(bricks.shape, dtype=int)
+        # Score
+        points = 0
         # Collapse bricks
         for i, b in enumerate(bricks):
             # get next neighbor
@@ -95,6 +101,8 @@ class Game:
             if line[b] == line[nb] and bricks_collapsed[i] == -1 and bricks_collapsed[ni] == -1:
                 line[b] *= 2
                 line[nb] *= 2
+                # update points with collapse value
+                points += line[b]
                 bricks_collapsed[i] = i
                 bricks_collapsed[ni] = i
         # init leftmost free element
@@ -105,7 +113,7 @@ class Game:
             bc = bricks[bci] if bci != -1 else -1
             if bc != b and bc != -1:
             # if it is a collapsed right brick, move it with it's neighbor
-                bricks_move_location[i] = bricks_move_location[bc]
+                bricks_move_location[i] = bricks_move_location[bci]
             else:
             # was not collapsed, or was collapsed into
                 bricks_move_location[i] = lm_free
@@ -114,19 +122,28 @@ class Game:
         newline = np.zeros(line.shape)
         for b, newloc in zip(bricks, bricks_move_location):
             newline[newloc] = line[b]
-        return newline
+        return points, newline
 
     # Applys a move to the board
-    def move(self, direction):
-        if direction not in [self.LEFT, self.RIGHT, self.UP, self.DOWN]:
+    @staticmethod
+    def move(board, direction):
+        if direction not in [Game.LEFT, Game.RIGHT, Game.UP, Game.DOWN]:
             raise Exception("Invalid direction '{}'".format(direction))
         # The algorithm will apply to the left and use transforms to handle directions
-        board = self.get_transformed_board(self.board, direction)
+        board = Game.get_transformed_board(board, direction)
+        points = 0
         # Apply algorithm
         for i, line in enumerate(board):
-            board[i] = self.move_line(line)
-        self.board = self.get_revert_transformed_board(board, direction)
-        self.add_brick()
+            l_points, newline = Game.move_line(line)
+            board[i] = newline
+            points += l_points
+        board = Game.get_revert_transformed_board(board, direction)
+        # If the board is full after the move, no piece can be added, game over
+        if (np.where(board == 0)[0].size == 0):
+            return Game.PTS_GAME_OVER, board
+        # Add a new brick and return the points accumulated and the new board
+        board = Game.add_brick(board)
+        return score, board
 
 action = {
     'u' : 'up',
@@ -136,7 +153,17 @@ action = {
 }
 
 game = Game()
+score = 0
 while True:
+    print("Score: {}".format(score))
     print(game.board)
-    a = raw_input('Action: ')
-    game.move(action[a])
+    a = input('Action: ')
+    try:
+        pts, game.board = game.move(game.board, action[a])
+    except KeyError:
+        print("Wrong character")
+        continue
+    if (pts == Game.PTS_GAME_OVER):
+        print("Game finished, your score: {}".format(score))
+        break
+    score += pts

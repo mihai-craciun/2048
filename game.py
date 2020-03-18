@@ -61,7 +61,8 @@ class GameGui:
     # Font
     font: pygame.font.Font
 
-    def __init__(self, grid_n):
+    def __init__(self, grid_n, transitions=False):
+        self.transitions = transitions
         self.grid_n = grid_n
         self.game = backend.Game(n=grid_n)
 
@@ -144,7 +145,7 @@ class GameGui:
 
 
 # App context initialization
-game = GameGui(GRID_N)
+game = GameGui(GRID_N, transitions=False)
 game.width = WIDTH
 game.height = HEIGHT
 game.grid_size = GRID_SIZE

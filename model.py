@@ -11,26 +11,30 @@ class Game:
     PTS_GAME_OVER = -1
 
     # Constructor
-    def __init__(self, board=None, n=None):
+    def __init__(self, board=None, n=None, score=None):
         # If no board is present, generate one
         if board is None:
             if n is None:
                 n = 4
+            self.score = 0
             self.n = n
             self.board = np.zeros((n, n), dtype=int)
             # Initialize the game by adding two initial blocks
-            self.board = self.add_brick(self.board)
-            self.board = self.add_brick(self.board)
+            self.board = self.add_brick_to_board(self.board)
+            self.board = self.add_brick_to_board(self.board)
         # Else check if the board has only power of two elements and matches the size
         else:
+            if score is None:
+                score = 0
+            self.score = score
             self.board = np.array(board, dtype=np.int)
             shape = self.board.shape
             if shape[0] != shape[1] or (n is not None and shape[0] != n):
                 raise Exception("The board is not a square, or wrong grid size specified")
 
-    # Inserts a random brick of 2 or 4 in a random free position
+    # Returns a clone board by inserting a random brick of 2 or 4 in a random free position
     @staticmethod
-    def add_brick(board):
+    def add_brick_to_board(board):
         board = np.array(board)
         empty_i, empty_j = np.where(board == 0)
         brick = np.random.choice([2, 4])
@@ -38,10 +42,6 @@ class Game:
         idx = np.random.randint(len(empty_i))
         board[empty_i[idx]][empty_j[idx]] = brick
         return board
-
-    # The score is the sum of all the points
-    def get_score(self):
-        return np.sum(self.board)
 
     # Returns a transformed board
     @staticmethod
@@ -124,9 +124,10 @@ class Game:
             newline[newloc] = line[b]
         return points, newline
 
-    # Applys a move to the board
+    # Applys a move to a board
+    # Returns the points and the new board
     @staticmethod
-    def move(board, direction):
+    def move_board(board, direction):
         if direction not in [Game.LEFT, Game.RIGHT, Game.UP, Game.DOWN]:
             raise Exception("Invalid direction '{}'".format(direction))
         # The algorithm will apply to the left and use transforms to handle directions
@@ -142,28 +143,37 @@ class Game:
         if (np.where(board == 0)[0].size == 0):
             return Game.PTS_GAME_OVER, board
         # Add a new brick and return the points accumulated and the new board
-        board = Game.add_brick(board)
-        return score, board
+        board = Game.add_brick_to_board(board)
+        return points, board
 
-action = {
-    'u' : 'up',
-    'l' : 'left',
-    'd' : 'down',
-    'r' : 'right',
-}
+    
+    # Moves the board in the given direction and returns a flag telling if game is over
+    def move(self, direction):
+        pts, board = self.move_board(self.board, direction)
+        if (pts == self.PTS_GAME_OVER):
+            return True
+        self.score += pts
+        self.board = board
+        return False
 
-game = Game()
-score = 0
-while True:
-    print("Score: {}".format(score))
-    print(game.board)
-    a = input('Action: ')
-    try:
-        pts, game.board = game.move(game.board, action[a])
-    except KeyError:
-        print("Wrong character")
-        continue
-    if (pts == Game.PTS_GAME_OVER):
-        print("Game finished, your score: {}".format(score))
-        break
-    score += pts
+
+# When running the file as primary, play a game
+if __name__ == "__main__":
+    action = {
+        'u' : 'up',
+        'l' : 'left',
+        'd' : 'down',
+        'r' : 'right',
+    }
+
+    game = Game()
+    game_over = False
+    while not game_over:
+        print("Score: {}".format(game.score))
+        print(game.board)
+        a = input('Action: ')
+        try:
+            game_over = game.move(action[a])
+        except KeyError:
+            print("Wrong character")
+            continue

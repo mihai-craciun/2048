@@ -14,10 +14,9 @@ MARGIN = 10
 GRID_SIZE = 4
 
 # App context initialization
-ctx = misc.Context()
+ctx = misc.Context(GRID_SIZE)
 ctx.width = WIDTH
 ctx.margin = MARGIN
-ctx.grid_size = GRID_SIZE
 ctx.compute_block_size()
 
 # initialize pygame and create window

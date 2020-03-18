@@ -8,7 +8,7 @@ BLK_COLOR = (187, 173, 160)
 BG_COLOR = (119, 110, 101)
 
 # Font
-FONT_SIZE = 40
+FONT_SIZE_RATIO = 0.08
 FONT_FILE = "ClearSans-Bold.ttf"
 
 
@@ -31,8 +31,9 @@ class Context:
     # Font
     font: pygame.font.Font
 
-    def __init__(self):
-        self.game = backend.Game()
+    def __init__(self, grid_size):
+        self.grid_size = grid_size
+        self.game = backend.Game(n=grid_size)
 
     # Computes the block size
     def compute_block_size(self):
@@ -50,7 +51,7 @@ class Context:
 
     # Computes the font
     def compute_font(self):
-        self.font = pygame.font.Font(FONT_FILE, FONT_SIZE)
+        self.font = pygame.font.Font(FONT_FILE, int(self.width * FONT_SIZE_RATIO))
 
 # UI Brick element
 class Brick:

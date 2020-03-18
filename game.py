@@ -47,6 +47,15 @@ while running:
         # check for closing the window
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                ctx.game.move(ctx.game.LEFT)
+            if event.key == pygame.K_RIGHT:
+                ctx.game.move(ctx.game.RIGHT)
+            if event.key == pygame.K_UP:
+                ctx.game.move(ctx.game.UP)
+            if event.key == pygame.K_DOWN:
+                ctx.game.move(ctx.game.DOWN)
 
     # Update
     all_sprites.update()

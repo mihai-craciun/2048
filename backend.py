@@ -32,6 +32,7 @@ class Game:
             shape = self.board.shape
             if shape[0] != shape[1] or (n is not None and shape[0] != n):
                 raise Exception("The board is not a square, or wrong grid size specified")
+        self.game_over = False
 
     # Returns a clone board by inserting a random brick of 2 or 4 in a random free position
     @staticmethod
@@ -152,10 +153,10 @@ class Game:
     def move(self, direction):
         pts, board = self.move_board(self.board, direction)
         if (pts == self.PTS_GAME_OVER):
-            return True
+            self.game_over = True
+            return
         self.score += pts
         self.board = board
-        return False
 
 
 # When running the file as primary, play a game
@@ -170,12 +171,12 @@ if __name__ == "__main__":
 
     game = Game()
     game_over = False
-    while not game_over:
+    while not game.game_over:
         print("Score: {}".format(game.score))
         print(game.board)
         a = input('Action: ')
         try:
-            game_over = game.move(action[a])
+            game.move(action[a])
         except KeyError:
             print("Wrong character")
             continue

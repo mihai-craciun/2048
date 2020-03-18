@@ -16,9 +16,15 @@ FONT_FILE = "ClearSans-Bold.ttf"
 class Context:
     # Window width
     width: int
+    # Window height
+    height: int
     # Grid margin
     margin: int
-    # Grid size (number of lines/columns)
+    # Grid n (number of lines/columns)
+    grid_n: int
+    # Grid rect
+    grid_rect: pygame.rect.Rect
+    # Grid size (width/height of grid)
     grid_size: int
     # Brick size (computed)
     brick_size: int
@@ -28,22 +34,24 @@ class Context:
     rects: list
     # Screen
     screen: pygame.Surface
+    # grid surface
+    grid: pygame.Surface
     # Font
     font: pygame.font.Font
 
-    def __init__(self, grid_size):
-        self.grid_size = grid_size
-        self.game = backend.Game(n=grid_size)
+    def __init__(self, grid_n):
+        self.grid_n = grid_n
+        self.game = backend.Game(n=grid_n)
 
     # Computes the block size
     def compute_block_size(self):
-        self.brick_size = (self.width - (self.grid_size + 1) * self.margin) // self.grid_size
+        self.brick_size = (self.width - (self.grid_n + 1) * self.margin) // self.grid_n
 
     # Computes the rects
     def compute_rects(self):
-        self.rects = [[] for _ in range(self.grid_size)]
-        for i in range(self.grid_size):
-            for j in range(self.grid_size):
+        self.rects = [[] for _ in range(self.grid_n)]
+        for i in range(self.grid_n):
+            for j in range(self.grid_n):
                 left = self.margin * (j + 1) + self.brick_size * j
                 top = self.margin * (i + 1) + self.brick_size * i
                 rect = pygame.Rect(left, top, self.brick_size, self.brick_size)
@@ -52,6 +60,12 @@ class Context:
     # Computes the font
     def compute_font(self):
         self.font = pygame.font.Font(FONT_FILE, int(self.width * FONT_SIZE_RATIO))
+
+    # Positions the grid inside the screen
+    def create_grid(self):
+        self.grid = pygame.Surface((self.grid_size, self.grid_size))
+        self.grid.fill(BG_COLOR)
+        self.grid_rect = pygame.rect.Rect(0, self.height - self.grid_size, self.grid_size, self.grid_size)
 
 # UI Brick element
 class Brick:
@@ -93,11 +107,32 @@ def draw_bricks(ctx: Context):
         for val, rect in zip(line, rect_vec):
             if val != ctx.game.EMPTY:
                 brick = Brick(rect, val, ctx)
-                ctx.screen.blit(brick.surface, rect)
+                ctx.grid.blit(brick.surface, rect)
 
 
 # Draws the rectangular slots of the grid directly on the screen
 def draw_rect_slots(ctx: Context):
     for rects_arr in ctx.rects:
         for rect in rects_arr:
-            pygame.draw.rect(ctx.screen, BLK_COLOR, rect)
+            pygame.draw.rect(ctx.grid, BLK_COLOR, rect)
+
+
+def draw_grid(ctx: Context):
+    ctx.screen.blit(ctx.grid, ctx.grid_rect)
+
+
+def draw_stats(ctx: Context):
+    string = ""
+    if ctx.game.game_over:
+        string = "Game over! "
+    string += "Score: {}".format(ctx.game.score)
+    text = ctx.font.render(string, True, Brick.TXT_POINTS_COLOR['rest'])
+    tw, th = text.get_size()
+    ctx.screen.blit(text, (ctx.grid_rect.width//2 - tw//2, ctx.grid_rect.y//2 - th//2))
+
+
+def draw(ctx: Context):
+    draw_stats(ctx)
+    draw_rect_slots(ctx)
+    draw_bricks(ctx)
+    draw_grid(ctx)

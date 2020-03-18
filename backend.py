@@ -9,6 +9,7 @@ class Game:
     UP = 'up'
     DOWN = 'down'
     PTS_GAME_OVER = -1
+    EMPTY = 0
 
     # Constructor
     def __init__(self, board=None, n=None, score=None):

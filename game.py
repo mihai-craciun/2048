@@ -12,7 +12,13 @@ TITLE = "2048 Game"
 # Game consts
 MARGIN = 10
 GRID_SIZE = 4
-BLOCK_SIZE = misc.compute_block_size(WIDTH, MARGIN, GRID_SIZE)
+
+# App context initialization
+ctx = misc.Context()
+ctx.width = WIDTH
+ctx.margin = MARGIN
+ctx.grid_size = GRID_SIZE
+ctx.compute_block_size()
 
 # initialize pygame and create window
 pygame.init()
@@ -21,9 +27,13 @@ screen = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption(TITLE)
 clock = pygame.time.Clock()
 
+# Init context UI elements
+ctx.screen = screen
+ctx.compute_font()
+ctx.compute_rects()
+
 # Game objects
 # Create the rect locations
-rects = misc.create_rects(MARGIN, BLOCK_SIZE, GRID_SIZE)
 
 all_sprites = pygame.sprite.Group()
 
@@ -43,7 +53,8 @@ while running:
     # Draw / Render
     screen.fill(misc.BG_COLOR)
     all_sprites.draw(screen)
-    misc.draw_rects(screen, rects)
+    misc.draw_rect_slots(ctx)
+    misc.draw_bricks(ctx)
     # *after* drawing everything
     pygame.display.flip()
 

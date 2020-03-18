@@ -159,6 +159,7 @@ class Game:
 
 # When running the file as primary, play a game
 if __name__ == "__main__":
+
     action = {
         'u' : 'up',
         'l' : 'left',

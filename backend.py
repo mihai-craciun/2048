@@ -114,10 +114,10 @@ class Game:
             bci = bricks_collapsed[i]
             bc = bricks[bci] if bci != -1 else -1
             if bc != b and bc != -1:
-            # if it is a collapsed right brick, move it with it's neighbor
+                # if it is a collapsed right brick, move it with it's neighbor
                 bricks_move_location[i] = bricks_move_location[bci]
             else:
-            # was not collapsed, or was collapsed into
+                # was not collapsed, or was collapsed into
                 bricks_move_location[i] = lm_free
                 lm_free += 1
         # Apply move to line
@@ -129,7 +129,7 @@ class Game:
     # Applys a move to a board
     # Returns the points and the new board
     @staticmethod
-    def move_board(board, direction):
+    def move_board(board, direction, add_brick=True):
         if direction not in [Game.LEFT, Game.RIGHT, Game.UP, Game.DOWN]:
             raise Exception("Invalid direction '{}'".format(direction))
         # The algorithm will apply to the left and use transforms to handle directions
@@ -142,19 +142,33 @@ class Game:
             points += l_points
         board = Game.get_revert_transformed_board(board, direction)
         # If the board is full after the move, no piece can be added, game over
-        if (np.where(board == 0)[0].size == 0):
+        if np.where(board == 0)[0].size == 0:
             return Game.PTS_GAME_OVER, board
-        # Add a new brick and return the points accumulated and the new board
-        board = Game.add_brick_to_board(board)
+        # Add a new brick if necessary
+        if add_brick:
+            board = Game.add_brick_to_board(board)
+        # Return the points accumulated and the new board
         return points, board
 
+    @staticmethod
+    def check_game_over(board):
+        for dir in [Game.LEFT, Game.RIGHT, Game.UP, Game.DOWN]:
+            pts, _ = Game.move_board(board, dir)
+            if pts != Game.PTS_GAME_OVER:
+                return False
+        return True
     
     # Moves the board in the given direction and returns a flag telling if game is over
     def move(self, direction):
-        pts, board = self.move_board(self.board, direction)
-        if (pts == self.PTS_GAME_OVER):
-            self.game_over = True
+        pts, board = self.move_board(self.board, direction, add_brick=False)
+        # Check if the move is invalid
+        if pts == self.PTS_GAME_OVER:
+            # If also the game is over, raise the flag
+            if self.check_game_over(self.board):
+                self.game_over = True
+            # Return
             return
+        board = self.add_brick_to_board(board)
         self.score += pts
         self.board = board
 

@@ -74,14 +74,14 @@ class Game:
             return np.flip(board.T, 0)
 
     # Moves a line to the left
-    # Returns a line of transitions
+    # Returns: current got points, line changed flag, a line of transitions
     @staticmethod
     def move_line(line):
         # Locations of bricks
         bricks = np.where(line != 0)[0]
         # If there is no brick return
         if len(bricks) == 0:
-            return 0, line
+            return 0, False, line
         # copy line
         line = np.array(line)
         # The locations the bricks shifted to
@@ -97,7 +97,7 @@ class Game:
             ni = i+1
             # if not exists return, no more collapses
             if ni == len(bricks):
-                break 
+                break
             nb = bricks[i+1]
             # if they can collapse
             if line[b] == line[nb] and bricks_collapsed[i] == -1 and bricks_collapsed[ni] == -1:
@@ -124,7 +124,7 @@ class Game:
         newline = np.zeros(line.shape)
         for b, newloc in zip(bricks, bricks_move_location):
             newline[newloc] = line[b]
-        return points, newline
+        return points, any(bricks != bricks_move_location), newline
 
     # Applys a move to a board
     # Returns the points and the new board
@@ -135,11 +135,13 @@ class Game:
         # The algorithm will apply to the left and use transforms to handle directions
         board = Game.get_transformed_board(board, direction)
         points = 0
+        changed = False
         # Apply algorithm
         for i, line in enumerate(board):
-            l_points, newline = Game.move_line(line)
+            l_points, l_changed, newline = Game.move_line(line)
             board[i] = newline
             points += l_points
+            changed |= l_changed
         board = Game.get_revert_transformed_board(board, direction)
         # If the board is full after the move, no piece can be added, game over
         if np.where(board == 0)[0].size == 0:
@@ -148,21 +150,21 @@ class Game:
         if add_brick:
             board = Game.add_brick_to_board(board)
         # Return the points accumulated and the new board
-        return points, board
+        return points, changed, board
 
     @staticmethod
     def check_game_over(board):
         for dir in [Game.LEFT, Game.RIGHT, Game.UP, Game.DOWN]:
-            pts, _ = Game.move_board(board, dir)
+            pts, _, _ = Game.move_board(board, dir)
             if pts != Game.PTS_GAME_OVER:
                 return False
         return True
     
     # Moves the board in the given direction and returns a flag telling if game is over
     def move(self, direction):
-        pts, board = self.move_board(self.board, direction, add_brick=False)
+        pts, changed, board = self.move_board(self.board, direction, add_brick=False)
         # Check if the move is invalid
-        if pts == self.PTS_GAME_OVER:
+        if pts == self.PTS_GAME_OVER or not changed:
             # If also the game is over, raise the flag
             if self.check_game_over(self.board):
                 self.game_over = True

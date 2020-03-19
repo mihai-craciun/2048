@@ -145,7 +145,7 @@ class Game:
         board = Game.get_revert_transformed_board(board, direction)
         # If the board is full after the move, no piece can be added, game over
         if np.where(board == 0)[0].size == 0:
-            return Game.PTS_GAME_OVER, board
+            return Game.PTS_GAME_OVER, changed, board
         # Add a new brick if necessary
         if add_brick:
             board = Game.add_brick_to_board(board)
